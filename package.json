@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@johmun/vue-tags-input": "^2.1.0",
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.2.2",
     "core-js": "^3.4.4",
-    "vue": "^2.6.10",
+    "vue": "^2.6.11",
     "vuejs-datepicker": "^1.6.2"
   },
   "devDependencies": {
