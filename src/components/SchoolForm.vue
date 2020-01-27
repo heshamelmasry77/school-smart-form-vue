@@ -23,12 +23,16 @@
                                 placeholder="Please enter video title"
                         ></b-form-input>
                     </b-form-group>
-                    <b-form-group id="input-allow-download-for-students" class="text-left">
-                        <b-form-checkbox-group v-model="form.allowDownloadForStudents"
-                                               id="checkbox-allow-download-for-students">
-                            <b-form-checkbox value="true">Allow Download For Students</b-form-checkbox>
-                        </b-form-checkbox-group>
-                    </b-form-group>
+
+                    <b-form-checkbox
+                            id="checkbox-allow-download-for-students" class="text-left"
+                            v-model="form.allowDownloadForStudents"
+                            name="checkbox-allow-download-for-students"
+                            value="true"
+                            unchecked-value="not_accepted"
+                    >
+                        Allow Download For Students
+                    </b-form-checkbox>
                     <b-form-textarea
                             id="video-description"
                             v-model="form.description"
@@ -69,8 +73,12 @@
                         <b-col>
                             <h6 class="text-left">Preparations : </h6>
                             <b-form-select v-model="form.selectedPreparation" class="text-left"
-                                           :options="preparationsOptions"></b-form-select>
-                            <!--                            <div class="mt-3 text-left">Selected: <strong>{{ form.selectedPreparation }}</strong></div>-->
+                                           :options="preparationsOptions">
+                                <template v-slot:first>
+                                    <b-form-select-option :value="null" disabled>-- Please select a preparation --
+                                    </b-form-select-option>
+                                </template>
+                            </b-form-select>
                         </b-col>
                     </b-row>
                     <b-row>
@@ -88,7 +96,6 @@
                         <b-col>
                             <h6 class="text-left">Publish it in : </h6>
                             <b-form-select v-model="form.publishItIn" :options="publishItInOptions"></b-form-select>
-                            <!--                            <div class="mt-3 text-left">Selected: <strong>{{ form.publishItIn }}</strong></div>-->
                         </b-col>
                     </b-row>
                     <b-row>
@@ -111,8 +118,8 @@
                                     <b-form-checkbox
                                             v-model="allSelected"
                                             :indeterminate="indeterminate"
-                                            aria-describedby="users"
-                                            aria-controls="users"
+                                            aria-describedby="classes"
+                                            aria-controls="classes"
                                             @change="toggleAll"
                                     >
                                         {{ allSelected ? 'Un-select All' : 'Select All' }}
@@ -120,22 +127,17 @@
                                 </template>
 
                                 <b-form-checkbox-group
-                                        id="users"
+                                        id="classes"
                                         v-model="selected"
-                                        :options="users"
-                                        name="users"
+                                        :options="classes"
+                                        name="classes"
                                         class="ml-4"
-                                        aria-label="Individual users"
+                                        aria-label="Individual classes"
                                         stacked
                                 ></b-form-checkbox-group>
                             </b-form-group>
                         </b-col>
                     </b-row>
-                    <!--                    <div class="text-left">-->
-                    <!--                        Selected: <strong>{{ selected }}</strong><br>-->
-                    <!--                        All Selected: <strong>{{ allSelected }}</strong><br>-->
-                    <!--                        Indeterminate: <strong>{{ indeterminate }}</strong>-->
-                    <!--                    </div>-->
                     <b-button type="submit" variant="primary">Submit</b-button>
                 </b-form>
             </b-col>
@@ -167,29 +169,7 @@
         publishItIn: null,
         publishInSpecialLibraries: [],
       },
-      preparationsOptions: [
-        {
-          value: null,
-          text: 'Please select an option'
-        },
-        {
-          value: 'a',
-          text: 'This is First option'
-        },
-        {
-          value: 'b',
-          text: 'Selected Option'
-        },
-        {
-          value: { C: '3PO' },
-          text: 'This is an option with object value'
-        },
-        {
-          value: 'd',
-          text: 'This one is disabled',
-          disabled: true
-        }
-      ],
+      preparationsOptions: [],
       publishItInOptions: [
         {
           value: null,
@@ -208,52 +188,70 @@
           text: 'Nothing'
         }
       ],
-      specialLibrariesOptions: [
-        {
-          text: 'Orange',
-          value: 'orange'
-        },
-        {
-          text: 'Apple',
-          value: 'apple'
-        },
-        {
-          text: 'Pineapple',
-          value: 'pineapple'
-        },
-        {
-          text: 'Grape',
-          value: 'grape'
-        }
-      ],
+      specialLibrariesOptions: [],
       tag: '',
-      users: ['Orange', 'Grape', 'Apple', 'Lime', 'Very Berry'],
+      classes: [],
       selected: [],
       allSelected: false,
       indeterminate: false,
       userIds: [],
-      selectedVideoUrlSource: null
+      selectedVideoUrlSource: null,
+      loading: true
     }),
     methods: {
       onSubmit(evt) {
         evt.preventDefault();
         console.log(this.form);
       },
-      selectAll: function () {
-        this.userIds = [];
-        this.allSelected = true;
-        if (this.allSelected) {
-          console.log(this.allSelected);
-          for (const user in this.users) {
-            this.userIds.push(this.users[user].id.toString());
-          }
-        }
-      },
-      select: function () {
-        this.allSelected = false;
-      },
       toggleAll(checked) {
-        this.selected = checked ? this.users.slice() : [];
+        this.selected = checked ? this.classes.slice() : [];
+      },
+      fetchPreparations: function () {
+        const params = {
+          subject_id: 1,
+        };
+        const preparationsBaseURI = 'https://roles.viewclass.com/api/preparing.list';
+        this.$http.get(preparationsBaseURI, { params })
+          .then((result) => {
+            this.preparationsOptions = Object.values(result.data[1]); // take only values from the object adn get me an array
+            console.log('preparationsOptions : ', this.preparationsOptions);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
+      },
+      fetchSpecialLibraries: function () {
+        const specialLibrariesBaseURI = 'https://roles.viewclass.com/api/custom-libraries.list';
+        this.$http.get(specialLibrariesBaseURI)
+          .then((result) => {
+            this.specialLibrariesOptions = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
+            //Set is to remove the array duplicates
+            console.log('specialLibrariesOptions : ', this.specialLibrariesOptions);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
+      },
+      fetchClasses: function () {
+        const params = {
+          class_id: 1
+        };
+        const classesBaseURI = 'https://roles.viewclass.com/api/class.students.list';
+        this.$http.get(classesBaseURI, { params })
+          .then((result) => {
+            this.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
+            //Set is to remove the array duplicates
+            console.log('classes : ', this.classes);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
       }
     },
     watch: {
@@ -270,6 +268,11 @@
           this.allSelected = false;
         }
       }
+    },
+    mounted() {
+      this.fetchPreparations();
+      this.fetchSpecialLibraries();
+      this.fetchClasses();
     }
   };
 </script>
