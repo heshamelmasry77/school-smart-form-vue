@@ -75,7 +75,7 @@
                     <b-row>
                         <b-col>
                             <h6 class="text-left">Preparations : </h6>
-                            <b-form-select v-model="form.selectedPreparation" class="text-left"
+                            <b-form-select v-model="form.preparation_id" class="text-left"
                                            :options="preparationsOptions">
                                 <template v-slot:first>
                                     <b-form-select-option :value="null" disabled>-- Please select a preparation --
@@ -170,7 +170,7 @@
         video_url: '',
         publish_date: null,
         publish_timeline: false,
-        selectedPreparation: null,
+        preparation_id: null,
         tags: [],
         sharing_with: null,
         publishItIn: null,
@@ -222,7 +222,13 @@
           .then((result) => {
             console.log(result.data);
             this.preparationsOptions = Object.values(result.data[1]);
-
+            this.preparationsOptions = this.preparationsOptions.map((x, i) => {
+              x = {
+                value: i,
+                text: x
+              };
+              return x;
+            });
             console.log('preparationsOptions : ', this.preparationsOptions);
           })
           .catch(error => {
@@ -237,6 +243,13 @@
           .then((result) => {
             this.specialLibrariesOptions = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
             //Set is to remove the array duplicates
+            this.specialLibrariesOptions = this.specialLibrariesOptions.map((x, i) => {
+              x = {
+                value: i,
+                text: x
+              };
+              return x;
+            });
             console.log('specialLibrariesOptions : ', this.specialLibrariesOptions);
           })
           .catch(error => {
@@ -254,6 +267,13 @@
           .then((result) => {
             this.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
             //Set is to remove the array duplicates
+            this.classes = this.classes.map((x, i) => {
+              x = {
+                value: i,
+                text: x
+              };
+              return x;
+            });
             console.log('classes : ', this.classes);
           })
           .catch(error => {
