@@ -1,25 +1,41 @@
 <template>
     <div class="SchoolForm">
         <h1>School Form</h1>
-        <form>
-            <label>
-                <input v-model="form.title" placeholder="Video Title">
-            </label>
-            <input type="checkbox" id="checkbox" v-model="form.allowDownloadForStudents">
-            <label for="checkbox">{{ form.allowDownloadForStudents }}</label>
-            <label>
-                <textarea v-model="form.description" placeholder="description for video"></textarea>
-            </label>
-            <input type="radio" id="one" value="Youtube" v-model="form.videoLink">
-            <label for="one">Youtube</label>
-            <br>
-            <input type="radio" id="two" value="Vimeo" v-model="form.videoLink">
-            <label for="two">Vimeo</label>
-            <br>
-            <input type="radio" id="three" value="Others Link" v-model="form.videoLink">
-            <label for="three">Others Link</label>
-            <br>
-            <span>Picked: {{ form.videoLink }}</span>
+        <b-form @submit="onSubmit">
+            <b-form-group
+                    label="Video Title"
+                    label-for="input-video-title"
+                    description="title for the video"
+            >
+                <b-form-input
+                        id="input-video-title"
+                        v-model="form.title"
+                        type="text"
+                        required
+                        placeholder="Video Title"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group id="input-allow-download-for-students">
+                <b-form-checkbox-group v-model="form.allowDownloadForStudents"
+                                       id="checkbox-allow-download-for-students">
+                    <b-form-checkbox value="true">Allow Download For Students</b-form-checkbox>
+                </b-form-checkbox-group>
+            </b-form-group>
+            <b-form-textarea
+                    id="video-description"
+                    v-model="form.description"
+                    placeholder="Enter description for video..."
+                    rows="3"
+                    max-rows="6"
+            ></b-form-textarea>
+            <div>
+                <b-form-group label="video Url">
+                    <b-form-radio v-model="form.videoUrl" name="video-url-radios" value="Youtube">Option A</b-form-radio>
+                    <b-form-radio v-model="form.videoUrl" name="video-url-radios" value="Vimeo">Option B</b-form-radio>
+                    <b-form-radio v-model="form.videoUrl" name="video-url-radios" value="Other Link">Option B</b-form-radio>
+                </b-form-group>
+                <div class="mt-3">Selected Video URL: <strong>{{ form.videoUrl }}</strong></div>
+            </div>
             <datepicker placeholder="Select Publish Date" v-model="form.publishDate"></datepicker>
             <label>
                 <select v-model="form.selectedPreparation">
@@ -70,7 +86,8 @@
                 </table>
             </div>
             <span>Selected Ids: {{ userIds }}</span>
-        </form>
+            <b-button type="submit" variant="primary">Submit</b-button>
+        </b-form>
     </div>
 </template>
 
@@ -91,7 +108,7 @@
         title: '',
         allowDownloadForStudents: false,
         description: '',
-        videoLink: '',
+        videoUrl: '',
         publishDate: null,
         selectedPreparation: '',
         tags: [],
@@ -126,6 +143,10 @@
       userIds: []
     }),
     methods: {
+      onSubmit(evt) {
+        evt.preventDefault();
+        console.log(this.form);
+      },
       selectAll: function () {
         this.userIds = [];
         this.allSelected = true;
