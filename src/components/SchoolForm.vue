@@ -118,8 +118,8 @@
                                     <b-form-checkbox
                                             v-model="allSelected"
                                             :indeterminate="indeterminate"
-                                            aria-describedby="users"
-                                            aria-controls="users"
+                                            aria-describedby="classes"
+                                            aria-controls="classes"
                                             @change="toggleAll"
                                     >
                                         {{ allSelected ? 'Un-select All' : 'Select All' }}
@@ -127,12 +127,12 @@
                                 </template>
 
                                 <b-form-checkbox-group
-                                        id="users"
+                                        id="classes"
                                         v-model="selected"
-                                        :options="users"
-                                        name="users"
+                                        :options="classes"
+                                        name="classes"
                                         class="ml-4"
-                                        aria-label="Individual users"
+                                        aria-label="Individual classes"
                                         stacked
                                 ></b-form-checkbox-group>
                             </b-form-group>
@@ -190,7 +190,7 @@
       ],
       specialLibrariesOptions: [],
       tag: '',
-      users: ['Orange', 'Grape', 'Apple', 'Lime', 'Very Berry'],
+      classes: [],
       selected: [],
       allSelected: false,
       indeterminate: false,
@@ -204,7 +204,7 @@
         console.log(this.form);
       },
       toggleAll(checked) {
-        this.selected = checked ? this.users.slice() : [];
+        this.selected = checked ? this.classes.slice() : [];
       },
       fetchPreparations: function () {
         const params = {
@@ -235,6 +235,23 @@
             // this.errored = true;
           })
           .finally(() => this.loading = false);
+      },
+      fetchClasses: function () {
+        const params = {
+          class_id: 1
+        };
+        const classesBaseURI = 'https://roles.viewclass.com/api/class.students.list';
+        this.$http.get(classesBaseURI, { params })
+          .then((result) => {
+            this.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
+            //Set is to remove the array duplicates
+            console.log('classes : ', this.classes);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
       }
     },
     watch: {
@@ -255,6 +272,7 @@
     mounted() {
       this.fetchPreparations();
       this.fetchSpecialLibraries();
+      this.fetchClasses();
     }
   };
 </script>
