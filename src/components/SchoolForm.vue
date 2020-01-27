@@ -23,12 +23,16 @@
                                 placeholder="Please enter video title"
                         ></b-form-input>
                     </b-form-group>
-                    <b-form-group id="input-allow-download-for-students" class="text-left">
-                        <b-form-checkbox-group v-model="form.allowDownloadForStudents"
-                                               id="checkbox-allow-download-for-students">
-                            <b-form-checkbox value="true">Allow Download For Students</b-form-checkbox>
-                        </b-form-checkbox-group>
-                    </b-form-group>
+
+                    <b-form-checkbox
+                            id="checkbox-allow-download-for-students" class="text-left"
+                            v-model="form.allowDownloadForStudents"
+                            name="checkbox-allow-download-for-students"
+                            value="true"
+                            unchecked-value="not_accepted"
+                    >
+                        Allow Download For Students
+                    </b-form-checkbox>
                     <b-form-textarea
                             id="video-description"
                             v-model="form.description"
@@ -69,8 +73,12 @@
                         <b-col>
                             <h6 class="text-left">Preparations : </h6>
                             <b-form-select v-model="form.selectedPreparation" class="text-left"
-                                           :options="preparationsOptions"></b-form-select>
-                            <!--                            <div class="mt-3 text-left">Selected: <strong>{{ form.selectedPreparation }}</strong></div>-->
+                                           :options="preparationsOptions">
+                                <template v-slot:first>
+                                    <b-form-select-option :value="null" disabled>-- Please select a preparation --
+                                    </b-form-select-option>
+                                </template>
+                            </b-form-select>
                         </b-col>
                     </b-row>
                     <b-row>
@@ -88,7 +96,6 @@
                         <b-col>
                             <h6 class="text-left">Publish it in : </h6>
                             <b-form-select v-model="form.publishItIn" :options="publishItInOptions"></b-form-select>
-                            <!--                            <div class="mt-3 text-left">Selected: <strong>{{ form.publishItIn }}</strong></div>-->
                         </b-col>
                     </b-row>
                     <b-row>
@@ -131,11 +138,6 @@
                             </b-form-group>
                         </b-col>
                     </b-row>
-                    <!--                    <div class="text-left">-->
-                    <!--                        Selected: <strong>{{ selected }}</strong><br>-->
-                    <!--                        All Selected: <strong>{{ allSelected }}</strong><br>-->
-                    <!--                        Indeterminate: <strong>{{ indeterminate }}</strong>-->
-                    <!--                    </div>-->
                     <b-button type="submit" variant="primary">Submit</b-button>
                 </b-form>
             </b-col>
@@ -167,29 +169,7 @@
         publishItIn: null,
         publishInSpecialLibraries: [],
       },
-      preparationsOptions: [
-        {
-          value: null,
-          text: 'Please select an option'
-        },
-        {
-          value: 'a',
-          text: 'This is First option'
-        },
-        {
-          value: 'b',
-          text: 'Selected Option'
-        },
-        {
-          value: { C: '3PO' },
-          text: 'This is an option with object value'
-        },
-        {
-          value: 'd',
-          text: 'This one is disabled',
-          disabled: true
-        }
-      ],
+      preparationsOptions: [],
       publishItInOptions: [
         {
           value: null,
@@ -232,28 +212,33 @@
       allSelected: false,
       indeterminate: false,
       userIds: [],
-      selectedVideoUrlSource: null
+      selectedVideoUrlSource: null,
+      loading: true
     }),
     methods: {
       onSubmit(evt) {
         evt.preventDefault();
         console.log(this.form);
       },
-      selectAll: function () {
-        this.userIds = [];
-        this.allSelected = true;
-        if (this.allSelected) {
-          console.log(this.allSelected);
-          for (const user in this.users) {
-            this.userIds.push(this.users[user].id.toString());
-          }
-        }
-      },
-      select: function () {
-        this.allSelected = false;
-      },
       toggleAll(checked) {
         this.selected = checked ? this.users.slice() : [];
+      },
+      fetchPreparations: function () {
+        const params = {
+          subject_id: 1,
+        };
+        const preparationsBaseURI = 'https://roles.viewclass.com/api/preparing.list';
+        this.$http.get(preparationsBaseURI, { params })
+          .then((result) => {
+            console.log(result.data[1]);
+            this.preparationsOptions = result.data[1];
+            console.log('preparationsOptions : ', this.preparationsOptions);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
       }
     },
     watch: {
@@ -270,6 +255,9 @@
           this.allSelected = false;
         }
       }
+    },
+    mounted() {
+      this.fetchPreparations();
     }
   };
 </script>
