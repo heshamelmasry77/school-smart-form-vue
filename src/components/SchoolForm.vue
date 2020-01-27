@@ -188,24 +188,7 @@
           text: 'Nothing'
         }
       ],
-      specialLibrariesOptions: [
-        {
-          text: 'Orange',
-          value: 'orange'
-        },
-        {
-          text: 'Apple',
-          value: 'apple'
-        },
-        {
-          text: 'Pineapple',
-          value: 'pineapple'
-        },
-        {
-          text: 'Grape',
-          value: 'grape'
-        }
-      ],
+      specialLibrariesOptions: [],
       tag: '',
       users: ['Orange', 'Grape', 'Apple', 'Lime', 'Very Berry'],
       selected: [],
@@ -230,9 +213,22 @@
         const preparationsBaseURI = 'https://roles.viewclass.com/api/preparing.list';
         this.$http.get(preparationsBaseURI, { params })
           .then((result) => {
-            console.log(result.data[1]);
-            this.preparationsOptions = result.data[1];
+            this.preparationsOptions = Object.values(result.data[1]); // take only values from the object adn get me an array
             console.log('preparationsOptions : ', this.preparationsOptions);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
+      },
+      fetchSpecialLibraries: function () {
+        const specialLibrariesBaseURI = 'https://roles.viewclass.com/api/custom-libraries.list';
+        this.$http.get(specialLibrariesBaseURI)
+          .then((result) => {
+            this.specialLibrariesOptions = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
+            //Set is to remove the array duplicates
+            console.log('specialLibrariesOptions : ', this.specialLibrariesOptions);
           })
           .catch(error => {
             console.log(error);
@@ -258,6 +254,7 @@
     },
     mounted() {
       this.fetchPreparations();
+      this.fetchSpecialLibraries();
     }
   };
 </script>
