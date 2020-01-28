@@ -26,4 +26,17 @@
       border: none;
     }
   }
+
+  .errors-container {
+    ul {
+      list-style-type: none;
+      padding: 0;
+
+      li {
+        span {
+          color: red;
+        }
+      }
+    }
+  }
 }

@@ -13,6 +13,16 @@
         <b-form-row>
             <b-col>
                 <b-form @submit="onSubmit">
+                    <b-row>
+                        <b-col>
+                            <div v-if="errors.length" class="errors-container text-left">
+                                <b>Please correct the following error(s):</b>
+                                <ul>
+                                    <li v-for="error in errors"><span>{{ error }}</span></li>
+                                </ul>
+                            </div>
+                        </b-col>
+                    </b-row>
                     <b-form-group
                             label="Video Title : "
                             label-for="input-video-title"
@@ -22,7 +32,6 @@
                                 id="input-video-title"
                                 v-model="form.title"
                                 type="text"
-                                required
                                 placeholder="Please enter video title"
                         ></b-form-input>
                     </b-form-group>
@@ -169,7 +178,7 @@
     props: {},
     data: () => ({
       form: {
-        title: '',
+        title: null,
         can_students_download: false,
         video_type: null,
         video_file: null,
@@ -180,7 +189,6 @@
         preparation_id: null,
         tags: [],
         sharing_with: null,
-        publishItIn: null,
         publish_custom_library: [],
         students: [],
         subject_id: 1,
@@ -210,23 +218,38 @@
       loading: true,
       selected: [],
       allSelected: false,
-      indeterminate: false
+      indeterminate: false,
+      errors: [],
     }),
     methods: {
       onSubmit(evt) {
         evt.preventDefault();
-        console.log(this.form);
-        let videoData = JSON.parse(JSON.stringify(this.form));
-        console.log(videoData);
-        this.$http.post('https://roles.viewclass.com/api/library.video.create', { videoData })
-          .then((response) => {
-            console.log(response);
-          })
-          .catch(error => {
-            console.log(error);
-            // this.errored = true;
-          })
-          .finally(() => this.loading = false);
+        if (this.form.title && this.form.publish_date) {
+          let videoData = JSON.parse(JSON.stringify(this.form));
+          this.$http.post('https://roles.viewclass.com/api/library.video.create', { videoData })
+            .then((response) => {
+              // console.log(response);
+            })
+            .catch(error => {
+              console.log(error);
+              // this.errored = true;
+            })
+            .finally(() => this.loading = false);
+        }
+        this.errors = [];
+        let formTitle = this.form.title;
+        if (!this.form.title) {
+          this.errors.push('Title is required.');
+        }
+        if (this.form.title && formTitle.length > 255) {
+          this.errors.push('Title must be less than 255 chars.');
+        }
+        if (this.form.title && formTitle.length < 2) {
+          this.errors.push('Title must be more than 2 chars.');
+        }
+        if (!this.form.publish_date) {
+          this.errors.push('Publish date required.');
+        }
       },
       toggleAll(checked) {
         this.selected = checked ? this.form.classes.slice() : [];
@@ -238,7 +261,6 @@
         const preparationsBaseURI = 'https://roles.viewclass.com/api/preparing.list';
         this.$http.get(preparationsBaseURI, { params })
           .then((result) => {
-            console.log(result.data);
             this.preparationsOptions = Object.values(result.data[1]);
             this.preparationsOptions = this.preparationsOptions.map((x, i) => {
               x = {
@@ -247,7 +269,6 @@
               };
               return x;
             });
-            console.log('preparationsOptions : ', this.preparationsOptions);
           })
           .catch(error => {
             console.log(error);
@@ -268,7 +289,6 @@
               };
               return x;
             });
-            console.log('specialLibrariesOptions : ', this.specialLibrariesOptions);
           })
           .catch(error => {
             console.log(error);
@@ -285,7 +305,6 @@
           .then((result) => {
             this.form.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
             //Set is to remove the array duplicates
-            console.log('classes : ', this.form.classes);
           })
           .catch(error => {
             console.log(error);
