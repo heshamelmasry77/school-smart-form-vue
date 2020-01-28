@@ -3,7 +3,10 @@
         <b-row>
             <b-col>
                 <b-jumbotron header="School Form" lead="Easy school form..">
-                    <h3>Create Video:</h3>
+                    <h3>
+                        <school-icon/>
+                        Create Video:
+                    </h3>
                 </b-jumbotron>
             </b-col>
         </b-row>
@@ -23,12 +26,11 @@
                                 placeholder="Please enter video title"
                         ></b-form-input>
                     </b-form-group>
-
                     <b-form-checkbox
                             id="checkbox-allow-download-for-students" class="text-left"
                             v-model="form.can_students_download"
                             name="checkbox-allow-download-for-students"
-                            value="true"
+                            value=true
                             unchecked-value="not_accepted"
                     >
                         Allow Download For Students
@@ -115,30 +117,33 @@
                     </b-row>
                     <b-row>
                         <b-col>
-                            <b-form-group class="text-left">
-                                <template v-slot:label>
-                                    <b class="text-left">Share contents with students : </b><br>
-                                    <b-form-checkbox
-                                            v-model="allSelected"
-                                            :indeterminate="indeterminate"
-                                            aria-describedby="classes"
-                                            aria-controls="classes"
-                                            @change="toggleAll"
-                                    >
-                                        {{ allSelected ? 'Un-select All' : 'Select All' }}
-                                    </b-form-checkbox>
-                                </template>
+                            <div>
+                                <b-form-group>
+                                    <template v-slot:label>
+                                        <h6 class="text-left">Share Contents with students : </h6>
+                                        <b-form-checkbox
+                                                v-model="allSelected"
+                                                :indeterminate="indeterminate"
+                                                aria-describedby="classes"
+                                                aria-controls="classes"
+                                                @change="toggleAll"
+                                                class="text-left"
+                                        >
+                                            {{ allSelected ? 'Un-select All' : 'Select All' }}
+                                        </b-form-checkbox>
+                                    </template>
 
-                                <b-form-checkbox-group
-                                        id="classes"
-                                        v-model="form.students"
-                                        :options="classes"
-                                        name="classes"
-                                        class="ml-4"
-                                        aria-label="Individual classes"
-                                        stacked
-                                ></b-form-checkbox-group>
-                            </b-form-group>
+                                    <b-form-checkbox-group
+                                            id="flavors"
+                                            v-model="selected"
+                                            :options="form.classes"
+                                            name="flavors"
+                                            class="ml-4 text-left"
+                                            aria-label="Individual classes"
+                                            stacked
+                                    ></b-form-checkbox-group>
+                                </b-form-group>
+                            </div>
                         </b-col>
                     </b-row>
                     <b-button type="submit" variant="primary">Submit</b-button>
@@ -152,12 +157,14 @@
   import './SchoolForm.scss';
   import Datepicker from 'vuejs-datepicker';
   import VueTagsInput from '@johmun/vue-tags-input';
+  import SchoolIcon from 'vue-material-design-icons/School.vue';
 
   export default {
     name: 'SchoolForm',
     components: {
       Datepicker,
       VueTagsInput,
+      SchoolIcon
     },
     props: {},
     data: () => ({
@@ -176,7 +183,8 @@
         publishItIn: null,
         publish_custom_library: [],
         students: [],
-        subject_id: 1
+        subject_id: 1,
+        classes: [],
       },
       preparationsOptions: [],
       publishItInOptions: [
@@ -199,19 +207,29 @@
       ],
       specialLibrariesOptions: [],
       tag: '',
-      classes: [],
+      loading: true,
+      selected: [],
       allSelected: false,
-      indeterminate: false,
-      userIds: [],
-      loading: true
+      indeterminate: false
     }),
     methods: {
       onSubmit(evt) {
         evt.preventDefault();
         console.log(this.form);
+        let videoData = JSON.parse(JSON.stringify(this.form));
+        console.log(videoData);
+        this.$http.post('https://roles.viewclass.com/api/library.video.create', { videoData })
+          .then((response) => {
+            console.log(response);
+          })
+          .catch(error => {
+            console.log(error);
+            // this.errored = true;
+          })
+          .finally(() => this.loading = false);
       },
       toggleAll(checked) {
-        this.form.students = checked ? this.classes.slice() : [];
+        this.selected = checked ? this.form.classes.slice() : [];
       },
       fetchPreparations: function () {
         const params = {
@@ -265,16 +283,9 @@
         const classesBaseURI = 'https://roles.viewclass.com/api/class.students.list';
         this.$http.get(classesBaseURI, { params })
           .then((result) => {
-            this.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
+            this.form.classes = [...new Set(Object.values(result.data[1]))]; // take only values from the object adn get me an array
             //Set is to remove the array duplicates
-            this.classes = this.classes.map((x, i) => {
-              x = {
-                value: i,
-                text: x
-              };
-              return x;
-            });
-            console.log('classes : ', this.classes);
+            console.log('classes : ', this.form.classes);
           })
           .catch(error => {
             console.log(error);
@@ -289,7 +300,7 @@
         if (newVal.length === 0) {
           this.indeterminate = false;
           this.allSelected = false;
-        } else if (newVal.length === this.users.length) {
+        } else if (newVal.length === this.form.classes.length) {
           this.indeterminate = false;
           this.allSelected = true;
         } else {
